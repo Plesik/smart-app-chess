@@ -1,0 +1,36 @@
+# C++
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.*
+secrets/
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+node_modules/
+dist/
+.next/
+coverage/
+
+# Python tests/tools
+__pycache__/
+.pytest_cache/
+.venv/
