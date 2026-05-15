@@ -34,3 +34,9 @@ coverage/
 __pycache__/
 .pytest_cache/
 .venv/
+
+**/build-debug/
+**/build-release/
+**/build/
+**/.pytest_cache/
+**/__pycache__/
