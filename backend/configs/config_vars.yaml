@@ -7,4 +7,4 @@ is-testing: false
 server-port: 8080
 
 # change to URI of your postgres database
-pg-connection: postgresql://testsuite@127.0.0.1:15433/backend_db_1
+pg-connection: postgresql://smart_chess:smart_chess@127.0.0.1:5432/smart_chess

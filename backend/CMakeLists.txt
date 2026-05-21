@@ -26,6 +26,8 @@ add_library(
     src/hello.cpp #
     src/hello_postgres.cpp
     src/handlers/create_game_handler.cpp
+    src/handlers/get_game_handler.cpp
+    src/handlers/handler_utils.cpp
     src/repositories/game_repository.cpp
     src/services/game_service.cpp
 )

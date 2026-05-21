@@ -16,6 +16,7 @@
 #include <hello_postgres.hpp> 
 
 #include "handlers/create_game_handler.hpp"
+#include "handlers/get_game_handler.hpp"
 
 int main(int argc, char* argv[]) {
     auto component_list =
@@ -30,6 +31,7 @@ int main(int argc, char* argv[]) {
             .Append<userver::components::Postgres>("postgres-db-1")
             .Append<backend::HelloPostgres>()
             .Append<smart_chess::handlers::CreateGameHandler>()
+            .Append<smart_chess::handlers::GetGameHandler>()
         ;
 
     return userver::utils::DaemonMain(argc, argv, component_list);

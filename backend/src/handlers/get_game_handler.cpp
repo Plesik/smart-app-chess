@@ -1,4 +1,4 @@
-#include "create_game_handler.hpp"
+#include "get_game_handler.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -17,37 +17,35 @@
 
 namespace smart_chess::handlers {
 
-CreateGameHandler::CreateGameHandler(
+GetGameHandler::GetGameHandler(
     const userver::components::ComponentConfig& config,
     const userver::components::ComponentContext& context
 )
     : HttpHandlerBase(config, context),
       pg_cluster_(
           context.FindComponent<userver::components::Postgres>("postgres-db-1")
-              .GetCluster()) {}
+              .GetCluster()
+      ) {}
 
-std::string CreateGameHandler::HandleRequestThrow(
+std::string GetGameHandler::HandleRequestThrow(
     const userver::server::http::HttpRequest& request,
     userver::server::request::RequestContext&
 ) const {
     try {
-        const auto body = userver::formats::json::FromString(request.RequestBody());
-
-        models::CreateGameRequest create_request{
-            .owner_id = utils::GetOwnerId(request),
-            .user_name = body["user_name"].As<std::string>(),
-            .engine_level = body["engine_level"].As<std::int32_t>(),
-            .user_side = body["user_side"].As<std::string>(),
-        };
+        const auto game_id = request.GetPathArg("game_id");
+        const auto owner_id = utils::GetOwnerId(request);
 
         repositories::GameRepository repository{pg_cluster_};
         services::GameService service{repository};
 
-        const auto game = service.CreateGame(create_request);
+        const auto game = service.GetGameById(std::string{game_id}, owner_id);
 
-        request.SetResponseStatus(userver::server::http::HttpStatus::kCreated);
+        if (!game.has_value()) {
+            request.SetResponseStatus(userver::server::http::HttpStatus::kNotFound);
+            return utils::MakeErrorJson("GAME_NOT_FOUND", "game not found");
+        }
 
-        return userver::formats::json::ToString(utils::MakeGameJson(game));
+        return userver::formats::json::ToString(utils::MakeGameJson(*game));
     } catch (const std::invalid_argument& ex) {
         request.SetResponseStatus(userver::server::http::HttpStatus::kBadRequest);
         return utils::MakeErrorJson("VALIDATION_ERROR", ex.what());

@@ -22,4 +22,14 @@ models::Game GameService::CreateGame(
     return game_repository_.CreateGame(request);
 }
 
+std::optional<models::Game> GameService::GetGameById(const std::string& game_id, const std::string& owner_id) const {
+    if (game_id.empty()) {
+        throw std::invalid_argument("game_id is empty");
+    }
+    if (owner_id.empty()) {
+        throw std::invalid_argument("owner_id is empty");
+    }
+    return game_repository_.GetGameById(game_id, owner_id);
+}
+
 }  // namespace smart_chess::services

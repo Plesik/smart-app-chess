@@ -63,4 +63,53 @@ models::Game GameRepository::CreateGame(
     return game;
 }
 
+std::optional<models::Game> GameRepository::GetGameById(const std::string& game_id, const std::string& owner_id) const {
+    const auto result = pg_cluster_->Execute(
+        userver::storages::postgres::ClusterHostType::kMaster,
+        R"(
+            SELECT
+                id::text,
+                owner_id,
+                user_name,
+                user_side,
+                engine_level,
+                current_fen,
+                status,
+                result,
+                side_to_move,
+                created_at::text,
+                updated_at::text
+            FROM games
+            WHERE id = $1::uuid
+              AND owner_id = $2
+        )",
+        game_id,
+        owner_id
+    );
+
+    if (result.IsEmpty()) {
+        return std::nullopt;
+    }
+
+    const auto row = result[0];
+
+    models::Game game{};
+
+    game.id = row["id"].As<std::string>();
+    game.owner_id = row["owner_id"].As<std::string>();
+    game.user_name = row["user_name"].As<std::string>();
+    game.user_side = row["user_side"].As<std::string>();
+    game.engine_level = row["engine_level"].As<std::int32_t>();
+    game.current_fen = row["current_fen"].As<std::string>();
+    game.status = row["status"].As<std::string>();
+    game.result = row["result"].As<std::optional<std::string>>();
+    game.side_to_move = row["side_to_move"].As<std::string>();
+    game.created_at = row["created_at"].As<std::string>();
+    game.updated_at = row["updated_at"].As<std::string>();
+
+    return game;
+
+}
+
+
 }
