@@ -25,6 +25,9 @@ add_library(
     src/greeting.cpp #
     src/hello.cpp #
     src/hello_postgres.cpp
+    src/handlers/create_game_handler.cpp
+    src/repositories/game_repository.cpp
+    src/services/game_service.cpp
 )
 target_link_libraries(
     ${PROJECT_NAME}_objs

@@ -75,3 +75,8 @@ components_manager:
             dns_resolver: async
             sync-start: true
             connlimit_mode: manual
+
+        handler-create-game:
+            path: /v1/games
+            method: POST
+            task_processor: main-task-processor
