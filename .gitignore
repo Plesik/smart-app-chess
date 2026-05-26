@@ -15,7 +15,8 @@ compile_commands.json
 
 # Env / secrets
 .env
-.env.*
+.env.prod
+.env.development
 secrets/
 *.pem
 *.key
