@@ -6,13 +6,13 @@
 namespace smart_chess::handlers::utils {
 
 std::string GetOwnerId(const userver::server::http::HttpRequest& request) {
-    const auto owner_id = request.GetHeader("X-Owner-Id");
+    const std::string owner_id = request.GetHeader("X-Owner-Id");
 
     if (owner_id.empty()) {
         return "local-dev-user";
     }
 
-    return std::string{owner_id};
+    return owner_id;
 }
 
 userver::formats::json::Value MakeGameJson(const models::Game& game) {
@@ -49,6 +49,41 @@ std::string MakeErrorJson(
     builder["error"]["message"] = message;
 
     return userver::formats::json::ToString(builder.ExtractValue());
+}
+
+userver::formats::json::Value MakeGamesListJson(const std::vector<models::Game>& games) {
+    userver::formats::json::ValueBuilder builder;
+    builder["count"] = static_cast<int>(games.size());
+    for (auto& game : games) {
+        builder["games"].PushBack(MakeGameJson(game));
+    }
+    return builder.ExtractValue();
+}
+
+userver::formats::json::Value MakeMoveJson(const models::Move& move) {
+    userver::formats::json::ValueBuilder builder;
+
+    builder["id"] = move.id;
+    builder["game_id"] = move.game_id;
+    builder["move_uci"] = move.move_uci;
+    builder["move_number"] = move.move_number;
+    builder["side"] = move.side;
+    builder["fen_before"] = move.fen_before;
+    builder["fen_after"] = move.fen_after;
+    builder["created_at"] = move.created_at;
+
+    return builder.ExtractValue();
+}
+
+userver::formats::json::Value MakeMoveResultJson(
+    const models::MakeMoveResult& result
+) {
+    userver::formats::json::ValueBuilder builder;
+
+    builder["move"] = MakeMoveJson(result.move);
+    builder["game"] = MakeGameJson(result.game);
+
+    return builder.ExtractValue();
 }
 
 }  // namespace smart_chess::handlers::utils

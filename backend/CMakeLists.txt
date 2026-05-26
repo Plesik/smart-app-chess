@@ -6,56 +6,52 @@ include(DownloadUserver)
 
 find_package(
     userver
-    COMPONENTS core #
+    COMPONENTS core
                postgresql
     QUIET
 )
+
 if(NOT userver_FOUND)
-    # Tries TRY_DIR first, falls back to downloading userver from GitHub using CPM.
     download_userver(TRY_DIR third_party/userver)
 endif()
 
 userver_setup_environment()
 
-# Common sources
 include_directories(src)
 
 add_library(
     ${PROJECT_NAME}_objs OBJECT
-    src/greeting.cpp #
-    src/hello.cpp #
-    src/hello_postgres.cpp
     src/handlers/create_game_handler.cpp
     src/handlers/get_game_handler.cpp
+    src/handlers/get_games_list_handler.cpp
+    src/handlers/make_move_handler.cpp
     src/handlers/handler_utils.cpp
+    src/handlers/resign_game_handler.cpp
+    src/handlers/delete_game_handler.cpp
+    src/handlers/get_legal_moves_handler.cpp
+
     src/repositories/game_repository.cpp
+
     src/services/game_service.cpp
+    src/services/chess_service.cpp
+
+    src/stockfish/stockfish_client.cpp
 )
+
 target_link_libraries(
     ${PROJECT_NAME}_objs
-    PUBLIC userver::core #
+    PUBLIC userver::core
            userver::postgresql
 )
 
+target_include_directories(
+    ${PROJECT_NAME}_objs
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
 
-# The Service
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_objs)
 
-# Unit Tests
-add_executable(${PROJECT_NAME}_unittest src/greeting_test.cpp)
-target_link_libraries(${PROJECT_NAME}_unittest PRIVATE ${PROJECT_NAME}_objs userver::utest)
-add_google_tests(${PROJECT_NAME}_unittest)
-
-# Benchmarks
-add_executable(${PROJECT_NAME}_benchmark src/greeting_benchmark.cpp)
-target_link_libraries(${PROJECT_NAME}_benchmark PRIVATE ${PROJECT_NAME}_objs userver::ubench)
-add_google_benchmark_tests(${PROJECT_NAME}_benchmark)
-
-# Functional testing
-userver_testsuite_add_simple()
-
-# Install
 include(GNUInstallDirs)
 
 if(DEFINED ENV{PREFIX})
@@ -64,13 +60,18 @@ if(DEFINED ENV{PREFIX})
     set(CMAKE_INSTALL_PREFIX "${PREFIX_PATH}")
 endif()
 
-file(GLOB CONFIGS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.yaml ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.json)
+file(
+    GLOB CONFIGS_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.yaml
+    ${CMAKE_CURRENT_SOURCE_DIR}/configs/*.json
+)
 
 install(
     TARGETS ${PROJECT_NAME}
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT ${PROJECT_NAME}
 )
+
 install(
     FILES ${CONFIGS_FILES}
     DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/${PROJECT_NAME}

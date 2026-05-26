@@ -12,26 +12,30 @@
 
 #include <userver/utils/daemon_run.hpp>
 
-#include <hello.hpp>
-#include <hello_postgres.hpp> 
-
 #include "handlers/create_game_handler.hpp"
 #include "handlers/get_game_handler.hpp"
+#include "handlers/get_games_list_handler.hpp"
+#include "handlers/get_legal_moves_handler.hpp"
+#include "handlers/make_move_handler.hpp"
+#include "handlers/resign_game_handler.hpp"
+#include "handlers/delete_game_handler.hpp"
 
 int main(int argc, char* argv[]) {
     auto component_list =
         userver::components::MinimalServerComponentList()
             .Append<userver::server::handlers::Ping>()
-            .Append<userver::components::TestsuiteSupport>()
             .AppendComponentList(userver::clients::http::ComponentList())
             .Append<userver::clients::dns::Component>()
-            .Append<userver::server::handlers::TestsControl>()
             .Append<userver::congestion_control::Component>()
-            .Append<backend::Hello>()
             .Append<userver::components::Postgres>("postgres-db-1")
-            .Append<backend::HelloPostgres>()
+            .Append<userver::components::TestsuiteSupport>()
             .Append<smart_chess::handlers::CreateGameHandler>()
             .Append<smart_chess::handlers::GetGameHandler>()
+            .Append<smart_chess::handlers::GetGamesListHandler>()
+            .Append<smart_chess::handlers::MakeMoveHandler>()
+            .Append<smart_chess::handlers::ResignGameHandler>()
+            .Append<smart_chess::handlers::DeleteGameHandler>()
+            .Append<smart_chess::handlers::GetLegalMovesHandler>()
         ;
 
     return userver::utils::DaemonMain(argc, argv, component_list);
