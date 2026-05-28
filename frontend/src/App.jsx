@@ -158,6 +158,88 @@ function normalizeMoveUci(value) {
     .replaceAll(' ', '');
 }
 
+function getInitialUserName() {
+  return localStorage.getItem('smart_chess_user_name') || 'Anton';
+}
+
+function pickRandom(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function getWinnerSideFromResult(result) {
+  const normalizedResult = String(result || '').toLowerCase();
+
+  if (normalizedResult.includes('white')) {
+    return 'white';
+  }
+
+  if (normalizedResult.includes('black')) {
+    return 'black';
+  }
+
+  return null;
+}
+
+function isDrawResult(result) {
+  const normalizedResult = String(result || '').toLowerCase();
+
+  return (
+    normalizedResult.includes('draw') ||
+    normalizedResult.includes('stalemate') ||
+    normalizedResult.includes('repetition') ||
+    normalizedResult.includes('insufficient') ||
+    normalizedResult.includes('fifty') ||
+    normalizedResult.includes('50')
+  );
+}
+
+function isResignResult(result) {
+  return String(result || '').toLowerCase().includes('resign');
+}
+
+function getGameEndPhrase(game) {
+  if (!game || game.status === 'in_progress' || !game.result) {
+    return '';
+  }
+
+  if (isResignResult(game.result)) {
+    return '';
+  }
+
+  if (isDrawResult(game.result)) {
+    return pickRandom([
+      'Ничья. Ровная партия.',
+      'Партия завершилась вничью.',
+      'Ничья — достойный результат.',
+    ]);
+  }
+
+  const winnerSide = getWinnerSideFromResult(game.result);
+
+  if (!winnerSide) {
+    return '';
+  }
+
+  const userSide = game.user_side;
+  const userWon = winnerSide === userSide;
+
+  if (userWon) {
+    return pickRandom([
+      'Отличный мат!',
+      'Великолепная партия!',
+      'Побеждать всегда приятно!',
+      'Отличная игра!',
+    ]);
+  }
+
+  return pickRandom([
+    'Мат. Ничего страшного, реванш всегда возможен.',
+    'Партия окончена. Stockfish сегодня был силён.',
+    'В этот раз победил движок, но следующая партия может быть вашей.',
+    'Мат. Хорошая попытка, можно сыграть ещё раз.',
+  ]);
+}
+
 function PlayerPanel({ name, side, capturedPieces, advantage }) {
   return (
     <div className="player-panel">
@@ -245,19 +327,42 @@ function ChessBoard({ fen, selectedSquare, legalMoves, onSquareClick }) {
 }
 
 function App() {
+  const initialUserName = getInitialUserName();
+
   const [games, setGames] = useState([]);
   const [currentGame, setCurrentGame] = useState(null);
   const [moveUci, setMoveUci] = useState('e2e4');
-  const [userName, setUserName] = useState('Anton');
-  const [draftUserName, setDraftUserName] = useState('Anton');
+  const [userName, setUserName] = useState(initialUserName);
+  const [draftUserName, setDraftUserName] = useState(initialUserName);
   const [isEditingName, setIsEditingName] = useState(false);
   const [userSide, setUserSide] = useState('white');
   const [engineLevel, setEngineLevel] = useState(3);
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [selectedSquare, setSelectedSquare] = useState(null);
   const [legalMoves, setLegalMoves] = useState([]);
   const appStateRef = useRef({});
   const dispatchCommandRef = useRef(null);
+
+  function showInfo(message) {
+    setInfoMessage(message);
+
+    if (message) {
+      window.setTimeout(() => {
+        setInfoMessage('');
+      }, 7000);
+    }
+  }
+
+  function applyUserName(nextName) {
+    const normalizedName = String(nextName || '').trim() || 'Игрок';
+
+    setUserName(normalizedName);
+    setDraftUserName(normalizedName);
+    localStorage.setItem('smart_chess_user_name', normalizedName);
+
+    return normalizedName;
+  }
 
   async function loadGames() {
     const data = await getGames(20);
@@ -267,6 +372,7 @@ function App() {
   async function dispatchCommand(command) {
     try {
       setError('');
+      setInfoMessage('');
 
       switch (command.type) {
         case 'create_game': {
@@ -305,6 +411,12 @@ function App() {
           setMoveUci('');
           setSelectedSquare(null);
           setLegalMoves([]);
+
+          const endPhrase = getGameEndPhrase(result.game);
+          if (endPhrase) {
+            showInfo(endPhrase);
+          }
+
           await loadGames();
           return;
         }
@@ -348,8 +460,22 @@ function App() {
           return;
         }
 
+        case 'change_user_name': {
+          const newName = String(command.payload?.userName || '').trim();
+
+          if (!newName) {
+            setError('Не понял новое имя');
+            return;
+          }
+
+          const appliedName = applyUserName(newName);
+          showInfo(`Имя изменено на ${appliedName}`);
+          return;
+        }
+
         case 'refresh_games': {
           await loadGames();
+          showInfo('Список партий обновлён');
           return;
         }
 
@@ -631,6 +757,11 @@ function App() {
             aliases: ['обнови список', 'покажи партии'],
             action: { type: 'refresh_games' },
           },
+          {
+            title: 'изменить имя',
+            aliases: ['поменяй имя', 'смени имя', 'меня зовут'],
+            action: { type: 'change_user_name' },
+          },
         ],
       },
     };
@@ -685,7 +816,7 @@ function App() {
   return (
     <main className="app">
       <section className="panel">
-        <h1>Smart Chess Dev Frontend</h1>
+        <h1>Голосовые шахматы</h1>
 
         <div className="form">
           <div className="name-setting">
@@ -700,8 +831,7 @@ function App() {
                   onChange={(event) => setDraftUserName(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
-                      const nextName = draftUserName.trim();
-                      setUserName(nextName || 'Игрок');
+                      applyUserName(draftUserName);
                       setIsEditingName(false);
                     }
 
@@ -725,7 +855,7 @@ function App() {
                     setIsEditingName(true);
                   }}
                 >
-                  Rename
+                  Изменить
                 </button>
               </div>
             )}
@@ -847,6 +977,7 @@ function App() {
 
       <section className="game-area">
         {error && <div className="error">{error}</div>}
+        {infoMessage && <div className="info">{infoMessage}</div>}
 
         {currentGame ? (
           <>
@@ -930,7 +1061,7 @@ function App() {
                   />
 
                   <PlayerPanel
-                    name={currentGame.user_name || 'Вы'}
+                    name={currentGame.user_name || userName || 'Вы'}
                     side={currentUserSide}
                     capturedPieces={userCapturedPieces}
                     advantage={userAdvantage}

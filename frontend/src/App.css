@@ -444,3 +444,13 @@ select[data-focusable="true"]:focus-visible {
   font-size: 20px;
   line-height: 1;
 }
+
+
+.info {
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(61, 166, 107, 0.14);
+  border: 1px solid rgba(61, 166, 107, 0.35);
+  color: #bff5d0;
+  margin-bottom: 12px;
+}
