@@ -29,3 +29,31 @@ SmartAppChess — это Canvas SmartApp для платформы Салют о
 Сдаться
 Удалить партию
 Помощь
+
+## Архитектура
+
+Sber Canvas App / frontend zip
+        ↓
+React frontend
+        ↓
+https://smart-app-chess.ru/api
+        ↓
+nginx / Caddy
+        ↓
+C++ userver backend
+        ↓
+PostgreSQL + Stockfish
+
+## Стек
+Frontend
+React
+Vite
+@salutejs/client
+Canvas App frontend
+CSS
+Backend
+C++17
+userver
+PostgreSQL
+Stockfish
+Docker / Docker Compose
