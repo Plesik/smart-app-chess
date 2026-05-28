@@ -15,7 +15,9 @@ compile_commands.json
 
 # Env / secrets
 .env
-.env.*
+.env.prod
+.env.production
+.env.development
 secrets/
 *.pem
 *.key
@@ -34,3 +36,9 @@ coverage/
 __pycache__/
 .pytest_cache/
 .venv/
+
+**/build-debug/
+**/build-release/
+**/build/
+**/.pytest_cache/
+**/__pycache__/

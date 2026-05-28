@@ -1,0 +1,11 @@
+build-debug
+build-release
+build-*
+cmake-build-*
+.cache
+.pytest_cache
+__pycache__
+*.pyc
+.git
+.gitignore
+Dockerfile

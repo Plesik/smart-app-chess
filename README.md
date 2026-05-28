@@ -1,0 +1,59 @@
+# SmartAppChess — голосовые шахматы для Салют
+
+SmartAppChess — это Canvas SmartApp для платформы Салют от Сбера.  
+Пользователь может играть в шахматы против Stockfish с голосовым управлением, ручным вводом ходов и управлением через доску.
+
+## Возможности
+
+- создание партии за белых или чёрных;
+- выбор уровня Stockfish от 1 до 8;
+- голосовые команды через сценарий Sber Studio;
+- ручной ввод ходов в формате UCI, например `e2e4`;
+- управление мышью/касанием по доске;
+- подсветка легальных ходов выбранной фигуры;
+- отображение съеденных фигур и материального преимущества;
+- сдача партии;
+- удаление партии;
+- сохранение партий пользователя;
+- Docker production-сборка с backend, PostgreSQL, Stockfish и frontend/nginx.
+
+## Примеры голосовых команд
+
+```text
+Запусти голосовые шахматы
+Создай партию за белых уровень три
+Создай партию за чёрных уровень два
+Е два е четыре
+Поменяй имя на Антон
+Обнови партии
+Сдаться
+Удалить партию
+Помощь
+
+## Архитектура
+
+Sber Canvas App / frontend zip
+        ↓
+React frontend
+        ↓
+https://smart-app-chess.ru/api
+        ↓
+nginx / Caddy
+        ↓
+C++ userver backend
+        ↓
+PostgreSQL + Stockfish
+
+## Стек
+Frontend
+React
+Vite
+@salutejs/client
+Canvas App frontend
+CSS
+Backend
+C++17
+userver
+PostgreSQL
+Stockfish
+Docker / Docker Compose
